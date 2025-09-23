@@ -28,4 +28,36 @@ export async function registerSW() {
       location.reload();
     }
   });
+
+  // Listen for cache cleared message from SW
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type === "CACHE_CLEARED") {
+      location.reload();
+    }
+  });
+
+  // Expose cache clearing function globally for debugging
+  interface WindowWithSW extends Window {
+    clearSWCache?: () => Promise<void>;
+    unregisterSW?: () => Promise<void>;
+  }
+
+  const windowWithSW = window as WindowWithSW;
+
+  windowWithSW.clearSWCache = async () => {
+    if (reg.active) {
+      reg.active.postMessage({ type: "CLEAR_CACHE" });
+    }
+  };
+
+  // Add unregister function for debugging
+  windowWithSW.unregisterSW = async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const registration of registrations) {
+      await registration.unregister();
+    }
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(name => caches.delete(name)));
+    location.reload();
+  };
 }

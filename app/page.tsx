@@ -1,9 +1,6 @@
+import { redirect } from 'next/navigation';
+
 export default function Home() {
-  return (
-    <>
-      <h1>Welcome to Nexus Crypto - Hola</h1>
-      <p>Your gateway to secure and innovative cryptocurrency solutions.</p>
-    </>
-  );
+  redirect('/currency');
 }
 
