@@ -256,7 +256,17 @@ export default function CurrencyPage() {
         if (data.baseAmount !== undefined) setBaseAmount(data.baseAmount);
         if (data.currencyAmounts) setCurrencyAmounts(data.currencyAmounts);
         if (data.lastEditedCurrency) setLastEditedCurrency(data.lastEditedCurrency);
-        if (data.currencyOrder) setCurrencyOrder(data.currencyOrder);
+        if (data.currencyOrder) {
+          const currentCodes = DEFAULT_CURRENCIES.map(c => c.code);
+          const savedOrder = data.currencyOrder;
+          const missingCodes = currentCodes.filter((code: string) => !savedOrder.includes(code));
+          if (missingCodes.length > 0) {
+            const updatedOrder = [...savedOrder, ...missingCodes];
+            setCurrencyOrder(updatedOrder);
+          } else {
+            setCurrencyOrder(savedOrder);
+          }
+        }
       } catch {
         // Ignore invalid data
       }
