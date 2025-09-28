@@ -111,7 +111,7 @@ export default function CryptoPage() {
     setter: (value: string) => void,
     allowNegative = false
   ) => {
-    // Allow digits, dots (decimals), and commas (thousands separators)
+    // Allow digits, dots (decimals), commas (thousands separators), and optional negative sign
     const pattern = allowNegative ? /^-?[\d.,]*$/ : /^[\d.,]*$/;
     if (pattern.test(value)) {
       setter(value);
@@ -121,7 +121,7 @@ export default function CryptoPage() {
   // Increment management functions
   const addCustomIncrement = () => {
     const increment = parseFloat(customIncrement) / 100; // Convert percentage to decimal
-    if (!isNaN(increment) && increment > 0 && increment <= 0.5 && !increments.includes(increment)) {
+    if (!isNaN(increment) && increment >= -0.5 && increment <= 0.5 && !increments.includes(increment)) {
       const newIncrements = [...increments, increment].sort((a, b) => a - b);
       setIncrements(newIncrements);
       setSelectedPreset('custom');
@@ -368,6 +368,7 @@ export default function CryptoPage() {
                 inputMode="decimal"
                 value={purchasePrice}
                 onChange={(e) => handleNumberInput(e.target.value, setPurchasePrice)}
+                onFocus={(e) => { setPurchasePrice(''); e.target.value = ''; }}
                 className="w-full px-4 py-4 sm:py-2 text-lg sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg
                          bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
                          focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
@@ -388,6 +389,7 @@ export default function CryptoPage() {
                 inputMode="decimal"
                 value={purchaseAmount}
                 onChange={(e) => handleNumberInput(e.target.value, setPurchaseAmount)}
+                onFocus={(e) => { setPurchaseAmount(''); e.target.value = ''; }}
                 className="w-full px-4 py-4 sm:py-2 text-lg sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg
                          bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
                          focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
@@ -529,11 +531,12 @@ export default function CryptoPage() {
                   type="text"
                   inputMode="decimal"
                   value={customIncrement}
-                  onChange={(e) => handleNumberInput(e.target.value, setCustomIncrement)}
+                  onChange={(e) => handleNumberInput(e.target.value, setCustomIncrement, true)}
+                  onFocus={(e) => { setCustomIncrement(''); e.target.value = ''; }}
                   className="flex-1 px-4 py-4 sm:py-2 text-lg sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg
                            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
                            focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
-                  placeholder="e.g., 1.5"
+                  placeholder="e.g., 1.5 or -2.5"
                 />
                 <span className="flex items-center px-3 text-gray-500 dark:text-gray-400">%</span>
                 <button

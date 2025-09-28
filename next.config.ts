@@ -5,14 +5,8 @@ const withSerwist = withSerwistInit({
   swSrc: "src/sw.ts",
   swDest: "public/sw.js",
   disable: process.env.NODE_ENV === "development",
-  register: false, // Keep manual registration for better control
+  register: false,
   reloadOnOnline: true,
-  additionalPrecacheEntries: [
-    // Ensure main pages are precached
-    { url: "/", revision: "1" },
-    { url: "/currency", revision: "1" },
-    { url: "/crypto", revision: "1" },
-  ],
   exclude: [/\.map$/, /^manifest.*\.js$/],
 });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface ConfigModalProps {
   isOpen: boolean;
@@ -56,14 +56,14 @@ const ConfigModal = ({
     onClose();
   };
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     // Reset to original values
     setLocalBuyFeeRate(buyFeeRate);
     setLocalSellFeeRate(sellFeeRate);
     setLocalSellAtDecimals(sellAtDecimals);
     setLocalAmountIncreasedDecimals(amountIncreasedDecimals);
     onClose();
-  };
+  }, [buyFeeRate, sellFeeRate, sellAtDecimals, amountIncreasedDecimals, onClose]);
 
   const resetToDefaults = () => {
     setLocalBuyFeeRate('0.1');
@@ -103,7 +103,7 @@ const ConfigModal = ({
       document.body.style.width = '';
       document.body.style.height = '';
     };
-  }, [isOpen]);
+  }, [isOpen, handleCancel]);
 
   if (!isOpen) return null;
 
@@ -171,6 +171,7 @@ const ConfigModal = ({
                   inputMode="decimal"
                   value={localBuyFeeRate}
                   onChange={(e) => handleNumberInput(e.target.value, setLocalBuyFeeRate)}
+                  onFocus={(e) => { setLocalBuyFeeRate(''); e.target.value = ''; }}
                   className="w-full px-4 py-4 sm:py-2 text-lg sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg
                            bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
                            focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
@@ -191,6 +192,7 @@ const ConfigModal = ({
                   inputMode="decimal"
                   value={localSellFeeRate}
                   onChange={(e) => handleNumberInput(e.target.value, setLocalSellFeeRate)}
+                  onFocus={(e) => { setLocalSellFeeRate(''); e.target.value = ''; }}
                   className="w-full px-4 py-4 sm:py-2 text-lg sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg
                            bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
                            focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
