@@ -12,6 +12,7 @@ const DEFAULT_CURRENCIES = [
   { code: 'BRL', name: 'Brazilian Real', symbol: 'R$' },
   { code: 'MXN', name: 'Mexican Peso', symbol: '$' },
   { code: 'UYU', name: 'Uruguayan Peso', symbol: '$U' },
+  { code: 'VES', name: 'Venezuelan Bolívar', symbol: 'Bs.' },
   { code: 'DOP', name: 'Dominican Peso', symbol: 'RD$' },
   { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
   { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
