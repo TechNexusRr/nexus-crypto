@@ -2,6 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ConfigModal } from '../../components/ConfigModal';
+import {
+  getUserLocale,
+  parseLocalizedNumber,
+  formatNumber as formatNumberLocale,
+  formatCurrency as formatCurrencyLocale,
+  formatPercentage as formatPercentageLocale,
+  sanitizeNumberInput
+} from '../../lib/locale';
 
 // Increment presets for different trading strategies
 const INCREMENT_PRESETS = {
@@ -71,49 +79,38 @@ export default function CryptoPage() {
   const [breakEvenPrice, setBreakEvenPrice] = useState<number>(0);
   const [calculationRows, setCalculationRows] = useState<CalculationRow[]>([]);
 
-  // Format number with specific decimals
-  const formatNumber = (num: number, decimals = 2) => {
-    return new Intl.NumberFormat('en-US', {
+  // Get user's locale for consistent formatting
+  const userLocale = getUserLocale();
+
+  // Helper formatting functions with user's locale
+  const formatNumber = useCallback((num: number, decimals = 2) => {
+    return formatNumberLocale(num, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
-    }).format(num);
-  };
+    }, userLocale);
+  }, [userLocale]);
 
-  // Format currency
-  const formatCurrency = (num: number, decimals = 2) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    }).format(num);
-  };
+  const formatCurrency = useCallback((num: number, decimals = 2) => {
+    return formatCurrencyLocale(num, 'USD', decimals, userLocale);
+  }, [userLocale]);
 
-  // Format percentage
-  const formatPercentage = (num: number, decimals = 2) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    }).format(num);
-  };
+  const formatPercentage = useCallback((num: number, decimals = 2) => {
+    return formatPercentageLocale(num / 100, decimals, userLocale);
+  }, [userLocale]);
 
-  // Parse US formatted number input
-  const parseLocalizedNumber = (value: string): number => {
-    // Remove commas (thousand separators) and parse as is
-    const normalized = value.replace(/,/g, '');
-    return parseFloat(normalized) || 0;
-  };
+  // Helper to parse numbers from user's locale
+  const parseNumber = useCallback((value: string): number => {
+    return parseLocalizedNumber(value, userLocale);
+  }, [userLocale]);
 
-  // Handle number input validation for US format
+  // Handle number input validation for user's locale
   const handleNumberInput = (
     value: string,
     setter: (value: string) => void,
     allowNegative = false
   ) => {
-    // Allow digits, dots (decimals), commas (thousands separators), and optional negative sign
-    const pattern = allowNegative ? /^-?[\d.,]*$/ : /^[\d.,]*$/;
-    if (pattern.test(value)) {
+    const sanitized = sanitizeNumberInput(value, allowNegative, userLocale);
+    if (sanitized === value) {
       setter(value);
     }
   };
@@ -143,7 +140,7 @@ export default function CryptoPage() {
 
   // Smart increment generator based on price range
   const generateSmartIncrements = () => {
-    const price = parseLocalizedNumber(purchasePrice);
+    const price = parseNumber(purchasePrice);
     if (price <= 0) return;
 
     let smartIncrements: number[] = [];
@@ -179,8 +176,8 @@ export default function CryptoPage() {
 
   // Main calculation function
   const calculateResults = useCallback(() => {
-    const price = parseLocalizedNumber(purchasePrice);
-    const amount = parseLocalizedNumber(purchaseAmount);
+    const price = parseNumber(purchasePrice);
+    const amount = parseNumber(purchaseAmount);
     const buyFee = parseFloat(buyFeeRate) / 100;
     const sellFee = parseFloat(sellFeeRate) / 100;
 
@@ -218,7 +215,7 @@ export default function CryptoPage() {
     });
 
     setCalculationRows(rows);
-  }, [purchasePrice, purchaseAmount, buyFeeRate, sellFeeRate, increments]);
+  }, [purchasePrice, purchaseAmount, buyFeeRate, sellFeeRate, increments, parseNumber]);
 
   // Recalculate on input changes
   useEffect(() => {
@@ -436,7 +433,7 @@ export default function CryptoPage() {
               <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={generateSmartIncrements}
-                  disabled={!purchasePrice || parseLocalizedNumber(purchasePrice) <= 0}
+                  disabled={!purchasePrice || parseNumber(purchasePrice) <= 0}
                   className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700
                            disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors touch-manipulation text-sm"
                   title="Generate increments optimized for your purchase price"

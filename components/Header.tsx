@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface WindowWithSW extends Window {
   clearSWCache?: () => Promise<void>;
@@ -30,9 +31,19 @@ const Header = () => {
     <header className="w-full border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            Nexus Crypto
-          </h1>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.svg"
+              alt="Nexus Crypto Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8"
+              priority
+            />
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              Nexus Crypto
+            </h1>
+          </div>
           <button
             onClick={handleClearCache}
             disabled={clearing}

@@ -7,6 +7,10 @@ import { ServiceWorkerRegistration } from "../components/ServiceWorkerRegistrati
 export const metadata = {
   title: "Nexus Crypto",
   description: "Currency & crypto P&L",
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -20,8 +24,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
 
         {/* PWA icons */}
-        <link rel="icon" href="/icon-192.svg" sizes="192x192" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icon-192.svg" />
+        <link rel="icon" href="/logo.svg" sizes="any" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
 
         {/* Theme color (status bar on Android) */}
         <meta name="theme-color" content="#0f172a" />

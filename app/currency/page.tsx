@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { CurrencyCard } from '../../components/CurrencyCard';
+import {
+  getUserLocale,
+  parseLocalizedNumber,
+  formatNumber,
+  sanitizeNumberInput
+} from '../../lib/locale';
 
 // Available currencies with names and symbols
 const DEFAULT_CURRENCIES = [
@@ -36,20 +42,21 @@ export default function CurrencyPage() {
   const [currencyOrder, setCurrencyOrder] = useState<string[]>(DEFAULT_CURRENCIES.map(c => c.code));
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
-  // Format number with US locale
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US', {
+  // Get user's locale for consistent formatting
+  const userLocale = getUserLocale();
+
+  // Helper to format numbers with user's locale
+  const formatNumberLocale = useCallback((num: number) => {
+    return formatNumber(num, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(num);
-  };
+    }, userLocale);
+  }, [userLocale]);
 
-  // Parse US formatted input
-  const parseLocalizedNumber = (value: string): number => {
-    // Remove commas (thousand separators) and parse as is
-    const normalized = value.replace(/,/g, '');
-    return parseFloat(normalized) || 0;
-  };
+  // Helper to parse numbers from user's locale
+  const parseNumber = useCallback((value: string): number => {
+    return parseLocalizedNumber(value, userLocale);
+  }, [userLocale]);
 
 
   // Toggle favorite currency
@@ -62,11 +69,18 @@ export default function CurrencyPage() {
     });
   }, []);
 
-  // Get ordered currencies list
+  // Get ordered currencies list with favorites always first
   const getOrderedCurrencies = useCallback(() => {
     const currencyMap = Object.fromEntries(DEFAULT_CURRENCIES.map(c => [c.code, c]));
-    return currencyOrder.map(code => currencyMap[code]).filter(Boolean);
-  }, [currencyOrder]);
+    const allCurrencies = currencyOrder.map(code => currencyMap[code]).filter(Boolean);
+
+    // Separate favorites and non-favorites while preserving order
+    const favoriteCurrencies = allCurrencies.filter(c => favorites.includes(c.code));
+    const nonFavoriteCurrencies = allCurrencies.filter(c => !favorites.includes(c.code));
+
+    // Return favorites first, then non-favorites
+    return [...favoriteCurrencies, ...nonFavoriteCurrencies];
+  }, [currencyOrder, favorites]);
 
   // Get displayed currencies based on filter and order
   const displayedCurrencies = showFavoritesOnly
@@ -83,7 +97,7 @@ export default function CurrencyPage() {
     // Otherwise calculate from USD base amount
     if (!rates || !baseAmount) return '';
 
-    const numAmount = parseLocalizedNumber(baseAmount);
+    const numAmount = parseNumber(baseAmount);
     if (isNaN(numAmount)) return '';
 
     if (currencyCode === 'USD') {
@@ -94,13 +108,14 @@ export default function CurrencyPage() {
     if (!rate) return '';
 
     const result = numAmount * rate;
-    return formatNumber(result);
-  }, [currencyAmounts, rates, baseAmount]);
+    return formatNumberLocale(result);
+  }, [currencyAmounts, rates, baseAmount, formatNumberLocale, parseNumber]);
 
   // Handle currency input change
   const handleCurrencyChange = useCallback((currencyCode: string, value: string) => {
-    // Allow only numbers, comma and dots
-    if (!/^[\d.,]*$/.test(value)) return;
+    // Sanitize input based on user's locale
+    const sanitized = sanitizeNumberInput(value, false, userLocale);
+    if (sanitized !== value) return;
 
     setLastEditedCurrency(currencyCode);
 
@@ -118,12 +133,12 @@ export default function CurrencyPage() {
 
       // Calculate USD equivalent and update base amount
       if (rates && value) {
-        const numAmount = parseLocalizedNumber(value);
+        const numAmount = parseNumber(value);
         if (!isNaN(numAmount) && numAmount > 0) {
           const rate = rates[currencyCode];
           if (rate) {
             const usdAmount = numAmount / rate;
-            setBaseAmount(formatNumber(usdAmount));
+            setBaseAmount(formatNumberLocale(usdAmount));
           }
         }
       }
@@ -139,7 +154,7 @@ export default function CurrencyPage() {
         return newAmounts;
       });
     }
-  }, [rates]);
+  }, [rates, parseNumber, formatNumberLocale, userLocale]);
 
   // Clear field when focused for easy editing
   const handleCurrencyFocus = (e: React.FocusEvent<HTMLInputElement>, currencyCode: string) => {
